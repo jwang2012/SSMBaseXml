@@ -18,7 +18,7 @@
 		class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
 		<property name="locations">
 			<list>
-				<value>classpath:conf/dbconfig.properties</value>
+				<value>classpath:config/dbconfig.properties</value>
 			</list>
 		</property>
 	</bean>
@@ -48,7 +48,7 @@
 		<property name="password" value="${db3.password}" />
 	</bean>
 
-	<bean id="dynamicDataSource" class="com.jwang.common.database.DynamicDataSource">
+	<bean id="dynamicDataSource" class="com.jwang.sshxml.common.database.DynamicDataSource">
 		<property name="targetDataSources">
 			<map key-type="java.lang.String">
 				<!-- 指定lookupKey和与之对应的数据源 -->
@@ -73,10 +73,10 @@
 		<!-- 数据库连接池 -->
 		<property name="dataSource" ref="dynamicDataSource" />
 		<!-- 加载mybatis的全局配置文件 -->
-		<property name="configLocation" value="classpath:conf/mybatis/mapper_manage_conf.xml" />
+		<property name="configLocation" value="classpath:config/mybatis/mapper_manage_conf.xml" />
 	</bean>
 	<bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
-		<property name="basePackage" value="com.jwang.education.dao"></property>
+		<property name="basePackage" value="com.jwang.sshxml.mapper"></property>
 		<property name="sqlSessionFactoryBeanName" value="sqlSessionFactory" />
 	</bean>
 	<!-- 配置定时任务 -->
