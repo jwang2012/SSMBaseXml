@@ -12,4 +12,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
       	#{userInfo.role}
       	)
     </insert>
+    
+    <select id="getUserInfoById" resultType="com.jwang.sshxml.beans.dao.UserDao">
+     	SELECT * FROM user WHERE id = #{id}
+    </select>
 </mapper>
