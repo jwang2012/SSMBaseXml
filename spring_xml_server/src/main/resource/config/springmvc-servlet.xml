@@ -12,7 +12,7 @@
 	default-lazy-init="true">
 	<mvc:annotation-driven />  
 	
-    <context:component-scan base-package="com.jwang.sshxml.*" use-default-filters="false">  
+    <context:component-scan base-package="com.jwang.ssmxml.*" use-default-filters="false">  
        <context:include-filter type="annotation" expression="org.springframework.stereotype.Controller"/>  
        <context:include-filter type="annotation" expression="org.springframework.web.bind.annotation.ControllerAdvice"/>  
    </context:component-scan>  

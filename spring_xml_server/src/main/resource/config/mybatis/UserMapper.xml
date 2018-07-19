@@ -2,7 +2,7 @@
 <!DOCTYPE mapper
 PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.jwang.sshxml.mapper.UserMapper">
+<mapper namespace="com.jwang.ssmxml.mapper.UserMapper">
 	<!-- 新增一个用户信息 -->
     <insert id="addUserInfo">
       	INSERT INTO user (account,password,role) VALUES
@@ -13,7 +13,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
       	)
     </insert>
     
-    <select id="getUserInfoById" resultType="com.jwang.sshxml.beans.dao.UserDao">
+    <select id="getUserInfoById" resultType="com.jwang.ssmxml.beans.dao.UserDao">
      	SELECT * FROM user WHERE id = #{id}
     </select>
 </mapper>
