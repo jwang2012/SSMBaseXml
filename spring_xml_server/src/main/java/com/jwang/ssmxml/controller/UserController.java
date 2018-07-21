@@ -19,6 +19,11 @@ import com.jwang.ssmxml.common.exception.ValidateException;
 import com.jwang.ssmxml.service.UserService;
 import com.jwang.ssmxml.validate.UserValidate;
 
+
+/**
+ * @author jwang
+ *
+ */
 @Controller
 @RequestMapping(value="/user")
 public class UserController extends BaseController
