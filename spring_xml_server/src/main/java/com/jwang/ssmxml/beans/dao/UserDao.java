@@ -1,7 +1,14 @@
 package com.jwang.ssmxml.beans.dao;
 
-public class UserDao
+import java.io.Serializable;
+
+public class UserDao implements Serializable
 {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -4081653734863438969L;
+
 	/**
 	 * id自增主键
 	 */

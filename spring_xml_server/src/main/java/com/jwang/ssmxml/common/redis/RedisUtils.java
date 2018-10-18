@@ -1,13 +1,14 @@
 package com.jwang.ssmxml.common.redis;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.util.StringUtils;
 
+import com.jwang.ssmxml.common.util.PropertiesUtils;
 import com.jwang.ssmxml.common.util.SerializeUtils;
 
 import redis.clients.jedis.BinaryClient.LIST_POSITION;
@@ -21,74 +22,45 @@ import redis.clients.util.SafeEncoder;
  * @author jwang
  *
  */
-public final class RedisUtils 
+public class RedisUtils 
 {
     private static Logger logger = LoggerFactory.getLogger(RedisUtils.class);
-
-    /**
-     * Redis服务器IP
-     */
-    @Value("$(redis.ip)")
-    private static String ADDR;
-
-    /**
-     * Redis的端口号
-     */
-    @Value("$(redis.port)")
-    private static int PORT;
-   
-    /**
-     * redis访问密码
-     */
-    @Value("$(redis.password)")
-    private static String PASSWORD;
-
-    /**
-     * 可用连接实例的最大数目，默认值为8
-     */
-    @Value("$(redis.pool.maxActive)")
-    private static int MAX_ACTIVE;
-
-    /**
-     * 控制一个pool最多有多少个状态为idle(空闲的)的jedis实例，默认值也是8
-     */
-    @Value("$(redis.pool.maxIdle)")
-    private static int MAX_IDLE;
-
-    /**
-     * 等待可用连接的最大时间，单位毫秒，默认值为-1，表示永不超时。
-     * 如果超过等待时间，则直接抛出JedisConnectionException；
-     */
-    @Value("$(redis.pool.maxWait)")
-    private static int MAX_WAIT;
-   
-    /**
-     * 超时时间
-     */
-    @Value("$(redis.timeout)")
-    private static int TIMEOUT;
-
-    /**
-     * 在borrow一个jedis实例时，是否提前进行validate操作；如果为true，则得到的jedis实例均是可用的；
-     */
-    @Value("$(redis.pool.testOnBorrow)")
-    private static boolean TEST_ON_BORROW;
-
-    private static JedisPool jedisPool = null;
-
-    /**
-     * 初始化Redis连接池
-     */
+    
+    //获取连接参数
+    private static final String PROPETIES_PATH = "config/redisConfig.properties";
+	
+	private static final Properties PROP = PropertiesUtils.getProperties(PROPETIES_PATH);
+	
+	private static final String REDIS_ADDR = PROP.getProperty("redis.ip");
+	
+	private static final String REDIS_PORT = PROP.getProperty("redis.port");
+	
+	private static final String REDIS_MAXACTIVE = PROP.getProperty("redis.pool.maxActive");
+	
+	private static final String REDIS_MAXIDLE = PROP.getProperty("redis.pool.maxIdle");
+	
+	private static final String REDIS_MAXWAIt = PROP.getProperty("redis.pool.maxWait");
+	
+	private static final String REDIS_TIMEOUT = PROP.getProperty("redis.timeout");
+	
+	private static final String REDIS_PASSWORD = PROP.getProperty("redis.password");
+	
+	private static final String REDIS_TESTONBORROW = PROP.getProperty("redis.pool.testOnBorrow");
+    
+	private static JedisPool jedisPool = null;
+    
+	//初始化redis连接池
     static
     {
         try 
         {
             JedisPoolConfig config = new JedisPoolConfig();
-            config.setMaxTotal(MAX_ACTIVE);
-            config.setMaxIdle(MAX_IDLE);
-            config.setMaxWaitMillis(MAX_WAIT);
-            config.setTestOnBorrow(TEST_ON_BORROW);
-            jedisPool = new JedisPool(config, ADDR, PORT, TIMEOUT, PASSWORD);
+            config.setMaxTotal(Integer.parseInt(REDIS_MAXACTIVE));
+            config.setMaxIdle(Integer.parseInt(REDIS_MAXIDLE));
+            config.setMaxWaitMillis(Integer.parseInt(REDIS_MAXWAIt));
+            config.setTestOnBorrow(Boolean.parseBoolean(REDIS_TESTONBORROW));
+            jedisPool = new JedisPool(config, REDIS_ADDR, Integer.parseInt(REDIS_PORT), 
+            		Integer.parseInt(REDIS_TIMEOUT), REDIS_PASSWORD);
         }
         catch (Exception e)
         {
@@ -101,7 +73,7 @@ public final class RedisUtils
      * 获取Jedis实例
      * @return
      */
-    public synchronized static Jedis getJedis() 
+    public static synchronized Jedis getJedis() 
     {
         try
         {
@@ -141,7 +113,7 @@ public final class RedisUtils
      * @param key
      * @return
      */
-    public Object getObject(String key) 
+    public static Object getObject(String key) 
     {
         Jedis jedis = null;
         try 
@@ -170,7 +142,7 @@ public final class RedisUtils
      * @param value
      * @return
      */
-    public String setObject(String key, Object value) 
+    public static String setObject(String key, Object value) 
     {
         Jedis jedis = null;
         try
@@ -199,7 +171,7 @@ public final class RedisUtils
      * @param expiretime
      * @return
      */
-    public String setObject(String key, Object value,int expiretime)
+    public static String setObject(String key, Object value,int expiretime)
     {
         String result = "";
         Jedis jedis = null;
@@ -231,7 +203,7 @@ public final class RedisUtils
      * @param key
      * @return
      */
-    public Long delkeyObject(String key) 
+    public static Long delkeyObject(String key) 
     {
         Jedis jedis = null;
         try 
@@ -257,7 +229,7 @@ public final class RedisUtils
      * @param key
      * @return
      */
-    public Boolean existsObject(String key) 
+    public static Boolean existsObject(String key) 
     {
         Jedis jedis = null;
         try
@@ -282,7 +254,7 @@ public final class RedisUtils
     /** 
      * 清空所有key 
      */  
-    public String flushAll()
+    public static String flushAll()
     {  
         Jedis jedis = getJedis();  
         String stata = jedis.flushAll();  
@@ -297,7 +269,7 @@ public final class RedisUtils
      * @return 状态码 
      * 
      */  
-    public String rename(String oldkey,String newkey) 
+    public static String rename(String oldkey,String newkey) 
     {  
         Jedis jedis = getJedis();  
         String status = jedis.rename(oldkey.getBytes(), newkey.getBytes());  
@@ -312,7 +284,7 @@ public final class RedisUtils
      * @return 影响的记录数 
      *
      */  
-    public long expired(String key, int seconds) 
+    public static long expired(String key, int seconds) 
     {  
         Jedis jedis = getJedis();  
         long count = jedis.expire(key, seconds);  
@@ -325,7 +297,7 @@ public final class RedisUtils
      * @param key 
      * @return 影响的记录数 
      */  
-    public long persist(String key)
+    public static long persist(String key)
     {  
         Jedis jedis = getJedis();  
         long count = jedis.persist(key);  
@@ -338,7 +310,7 @@ public final class RedisUtils
      * @param String  ... keys 
      * @return 删除的记录数 
      * */  
-    public long del(String... keys)
+    public static long del(String... keys)
     {  
         Jedis jedis = getJedis();  
         long count = jedis.del(keys);  
@@ -351,7 +323,7 @@ public final class RedisUtils
      * @param String .. keys 
      * @return 删除的记录数 
      */  
-    public long del(byte[]... keys)
+    public static long del(byte[]... keys)
     {  
         Jedis jedis = getJedis();  
         long count = jedis.del(keys);  
@@ -364,7 +336,7 @@ public final class RedisUtils
      * @param String key 
      * @return String string|list|set|zset|hash 
      */  
-    public String type(String key)
+    public static String type(String key)
     {  
         Jedis jedis=getJedis();    
         String type = jedis.type(key);   
@@ -376,7 +348,7 @@ public final class RedisUtils
      * 查找所有匹配给定的模式的键 
      * @param String  key的表达式,*表示多个，？表示一个 
      */  
-    public Set<String> keys(String pattern)
+    public static Set<String> keys(String pattern)
     {  
         Jedis jedis = getJedis();  
         Set<String> set = jedis.keys(pattern);  
@@ -392,7 +364,7 @@ public final class RedisUtils
      * @param String member 
      * @return 操作码,0或1 
      */  
-    public long setAdd(String key, String member)
+    public static long setAdd(String key, String member)
     {  
         Jedis jedis = getJedis();  
         long status = jedis.sadd(key, member);  
@@ -400,7 +372,7 @@ public final class RedisUtils
         return status;  
     }  
 
-    public long setAdd(byte[] key, byte[] member)
+    public static long setAdd(byte[] key, byte[] member)
     {  
         Jedis jedis = getJedis();  
         long status = jedis.sadd(key, member);  
@@ -413,7 +385,7 @@ public final class RedisUtils
      * @param String key 
      * @return 元素个数 
      */  
-    public long scard(String key)
+    public static long scard(String key)
     {  
         Jedis jedis = getJedis();   
         long len = jedis.scard(key);  
@@ -426,7 +398,7 @@ public final class RedisUtils
      * @param String ... keys 
      * @return 差异的成员集合 
      */  
-    public Set<String> sdiff(String... keys) 
+    public static Set<String> sdiff(String... keys) 
     {  
         Jedis jedis = getJedis();  
         Set<String> set = jedis.sdiff(keys);  
@@ -440,7 +412,7 @@ public final class RedisUtils
      * @param String ... keys 比较的集合 
      * @return 新集合中的记录数 
      */  
-    public long sdiffstore(String newkey, String... keys) 
+    public static long sdiffstore(String newkey, String... keys) 
     {  
         Jedis jedis = getJedis();  
         long s = jedis.sdiffstore(newkey, keys);  
@@ -453,7 +425,7 @@ public final class RedisUtils
      * @param String ... keys 
      * @return 交集成员的集合 
      */  
-    public Set<String> sinter(String... keys) 
+    public static Set<String> sinter(String... keys) 
     {  
         Jedis jedis = getJedis();  
         Set<String> set = jedis.sinter(keys);  
@@ -467,7 +439,7 @@ public final class RedisUtils
      * @param String ... keys 比较的集合 
      * @return 新集合中的记录数 
      */  
-    public long sinterstore(String newkey, String... keys)
+    public static long sinterstore(String newkey, String... keys)
     {  
         Jedis jedis = getJedis();  
         long s = jedis.sinterstore(newkey, keys);  
@@ -481,7 +453,7 @@ public final class RedisUtils
      * @param String member 要判断的值 
      * @return 存在返回1，不存在返回0 
      */  
-    public boolean sismember(String key, String member)
+    public static boolean sismember(String key, String member)
     {  
         Jedis jedis = getJedis();   
         boolean status = jedis.sismember(key, member);  
@@ -494,7 +466,7 @@ public final class RedisUtils
      * @param String  key 
      * @return 成员集合 
      * */  
-    public Set<String> smembers(String key) 
+    public static Set<String> smembers(String key) 
     {  
         Jedis jedis = getJedis();   
         Set<String> set = jedis.smembers(key);  
@@ -502,7 +474,7 @@ public final class RedisUtils
         return set;  
     }  
 
-    public Set<byte[]> smembers(byte[] key) 
+    public static Set<byte[]> smembers(byte[] key) 
     {  
         Jedis jedis = getJedis();    
         Set<byte[]> set = jedis.smembers(key);  
@@ -519,7 +491,7 @@ public final class RedisUtils
      * @param String member 源集合中的成员 
      * @return 状态码，1成功，0失败 
      */  
-    public long smove(String srckey, String dstkey, String member) 
+    public static long smove(String srckey, String dstkey, String member) 
     {  
         Jedis jedis = getJedis();  
         long s = jedis.smove(srckey, dstkey, member);  
@@ -532,7 +504,7 @@ public final class RedisUtils
      * @param String  key 
      * @return 被删除的成员 
      */  
-    public String spop(String key) 
+    public static String spop(String key) 
     {  
         Jedis jedis = getJedis();  
         String s = jedis.spop(key);  
@@ -546,7 +518,7 @@ public final class RedisUtils
      * @param String  member 要删除的成员 
      * @return 状态码，成功返回1，成员不存在返回0 
      */  
-    public long srem(String key, String member)
+    public static long srem(String key, String member)
     {  
         Jedis jedis = getJedis();  
         long s = jedis.srem(key, member);  
@@ -560,7 +532,7 @@ public final class RedisUtils
      * @return 合并后的结果集合 
      * @see sunionstore 
      * */  
-    public Set<String> sunion(String... keys) 
+    public static Set<String> sunion(String... keys) 
     {  
         Jedis jedis = getJedis();  
         Set<String> set = jedis.sunion(keys);  
@@ -573,7 +545,7 @@ public final class RedisUtils
      * @param String  newkey 新集合的key 
      * @param String ... keys 要合并的集合 
      */  
-    public long sunionstore(String newkey, String... keys)
+    public static long sunionstore(String newkey, String... keys)
     {  
         Jedis jedis = getJedis();  
         long s = jedis.sunionstore(newkey, keys);  
@@ -590,7 +562,7 @@ public final class RedisUtils
      * @param String  member 要加入的值， 
      * @return 状态码 1成功，0已存在member的值 
      */  
-    public long zadd(String key, double score, String member)
+    public static long zadd(String key, double score, String member)
     {  
         Jedis jedis = getJedis();  
         long status = jedis.zadd(key, score, member);  
@@ -603,7 +575,7 @@ public final class RedisUtils
      * @param String  key 
      * @return 如果返回0则集合不存在 
      */  
-    public long zcard(String key)
+    public static long zcard(String key)
     {  
         Jedis jedis = getJedis();  
         long len = jedis.zcard(key);  
@@ -617,7 +589,7 @@ public final class RedisUtils
      * @param double min 最小排序位置 
      * @param double max 最大排序位置 
      * */  
-    public long zcount(String key, double min, double max) 
+    public static long zcount(String key, double min, double max) 
     {  
         Jedis jedis = getJedis();  
         long len = jedis.zcount(key, min, max);  
@@ -631,7 +603,7 @@ public final class RedisUtils
      * @param key 
      * @return 
      */  
-    public long zlength(String key) 
+    public static long zlength(String key) 
     {  
         long len = 0;  
         Set<String> set = zrange(key, 0, -1);  
@@ -646,7 +618,7 @@ public final class RedisUtils
      * @param String  member 要插入的值 
      * @return 增后的权重 
      * */  
-    public double zincrby(String key, double score, String member) 
+    public static double zincrby(String key, double score, String member) 
     {  
         Jedis jedis = getJedis();  
         double s = jedis.zincrby(key, score, member);  
@@ -661,7 +633,7 @@ public final class RedisUtils
      * @param int end 结束位置(包含) 
      * @return Set<String> 
      * */  
-    public Set<String> zrange(String key, int start, int end)
+    public static Set<String> zrange(String key, int start, int end)
     {  
         Jedis jedis = getJedis();   
         Set<String> set = jedis.zrange(key, start, end);  
@@ -676,7 +648,7 @@ public final class RedisUtils
      * @param double max 下限权重 
      * @return Set<String> 
      * */  
-    public Set<String> zrangeByScore(String key, double min, double max)
+    public static Set<String> zrangeByScore(String key, double min, double max)
     {  
         Jedis jedis = getJedis();   
         Set<String> set = jedis.zrangeByScore(key, min, max);  
@@ -691,7 +663,7 @@ public final class RedisUtils
      * @param String member 
      * @return long 位置 
      * */  
-    public long zrank(String key, String member)
+    public static long zrank(String key, String member)
     {  
         Jedis jedis = getJedis();   
         long index = jedis.zrank(key, member);  
@@ -706,7 +678,7 @@ public final class RedisUtils
      * @param String member 
      * @return long 位置 
      * */  
-    public long zrevrank(String key, String member)
+    public static long zrevrank(String key, String member)
     {  
         Jedis jedis = getJedis();   
         long index = jedis.zrevrank(key, member);  
@@ -720,7 +692,7 @@ public final class RedisUtils
      * @param String member  
      * @return 返回1成功 
      * */  
-    public long zrem(String key, String member)
+    public static long zrem(String key, String member)
     {  
         Jedis jedis = getJedis();  
         long s = jedis.zrem(key, member);  
@@ -733,7 +705,7 @@ public final class RedisUtils
      * @param key 
      * @return 
      */  
-    public long zrem(String key) 
+    public static long zrem(String key) 
     {  
         Jedis jedis = getJedis();  
         long s = jedis.del(key);  
@@ -748,7 +720,7 @@ public final class RedisUtils
      * @param int end 结束区间,-1为最后一个元素(包含) 
      * @return 删除的数量 
      * */  
-    public long zremrangeByRank(String key, int start, int end)
+    public static long zremrangeByRank(String key, int start, int end)
     {  
         Jedis jedis = getJedis();  
         long s = jedis.zremrangeByRank(key, start, end);  
@@ -763,7 +735,7 @@ public final class RedisUtils
      * @param double max 上限权重(包含) 
      * @return 删除的数量 
      * */  
-    public long zremrangeByScore(String key, double min, double max)
+    public static long zremrangeByScore(String key, double min, double max)
     {  
         Jedis jedis = getJedis();  
         long s = jedis.zremrangeByScore(key, min, max);  
@@ -778,7 +750,7 @@ public final class RedisUtils
      * @param int end 
      * @return Set<String> 
      * */  
-    public Set<String> zrevrange(String key, int start, int end) 
+    public static Set<String> zrevrange(String key, int start, int end) 
     {  
         Jedis jedis = getJedis();   
         Set<String> set = jedis.zrevrange(key, start, end);  
@@ -792,7 +764,7 @@ public final class RedisUtils
      * @param memeber 
      * @return double 权重 
      * */  
-    public double zscore(String key, String memebr)
+    public static double zscore(String key, String memebr)
     {  
         Jedis jedis = getJedis();   
         Double score = jedis.zscore(key, memebr);  
@@ -810,7 +782,7 @@ public final class RedisUtils
      * @param String  fieid 存储的名字 
      * @return 状态码，1成功，0失败 
      * */  
-    public long hdel(String key, String fieid)
+    public static long hdel(String key, String fieid)
     {  
         Jedis jedis = getJedis();  
         long s = jedis.hdel(key, fieid);  
@@ -818,7 +790,7 @@ public final class RedisUtils
         return s;  
     }  
 
-    public long hdel(String key)
+    public static long hdel(String key)
     {  
         Jedis jedis = getJedis();  
         long s = jedis.del(key);  
@@ -832,7 +804,7 @@ public final class RedisUtils
      * @param String  fieid 存储的名字 
      * @return 1存在，0不存在 
      * */  
-    public boolean hexists(String key, String fieid) 
+    public static boolean hexists(String key, String fieid) 
     {  
         Jedis jedis = getJedis();   
         boolean s = jedis.hexists(key, fieid);  
@@ -847,7 +819,7 @@ public final class RedisUtils
      * @param String fieid 存储的名字 
      * @return 存储对应的值 
      * */  
-    public String hget(String key, String fieid) 
+    public static String hget(String key, String fieid) 
     {  
         Jedis jedis = getJedis();   
         String s = jedis.hget(key, fieid);  
@@ -855,7 +827,7 @@ public final class RedisUtils
         return s;  
     }  
 
-    public byte[] hget(byte[] key, byte[] fieid)
+    public static byte[] hget(byte[] key, byte[] fieid)
     {  
         Jedis jedis = getJedis();   
         byte[] s = jedis.hget(key, fieid);  
@@ -868,7 +840,7 @@ public final class RedisUtils
      * @param String    key 
      * @return Map<Strinig,String> 
      * */  
-    public Map<String, String> hgetAll(String key) 
+    public static Map<String, String> hgetAll(String key) 
     {  
         Jedis jedis = getJedis();   
         Map<String, String> map = jedis.hgetAll(key);  
@@ -883,7 +855,7 @@ public final class RedisUtils
      * @param String value 
      * @return 状态码 1成功，0失败，fieid已存在将更新，也返回0 
      * **/  
-    public long hset(String key, String fieid, String value) 
+    public static long hset(String key, String fieid, String value) 
     {  
         Jedis jedis = getJedis();  
         long s = jedis.hset(key, fieid, value);  
@@ -891,7 +863,7 @@ public final class RedisUtils
         return s;  
     }  
 
-    public long hset(String key, String fieid, byte[] value) 
+    public static long hset(String key, String fieid, byte[] value) 
     {  
         Jedis jedis = getJedis();  
         long s = jedis.hset(key.getBytes(), fieid.getBytes(), value);  
@@ -906,7 +878,7 @@ public final class RedisUtils
      * @param String value 
      * @return 状态码 1成功，0失败fieid已存 
      * **/  
-    public long hsetnx(String key, String fieid, String value)
+    public static long hsetnx(String key, String fieid, String value)
     {  
         Jedis jedis = getJedis();  
         long s = jedis.hsetnx(key, fieid, value);  
@@ -921,7 +893,7 @@ public final class RedisUtils
      *            key 
      * @return List<String> 
      * */  
-    public List<String> hvals(String key)
+    public static List<String> hvals(String key)
     {  
         Jedis jedis = getJedis();   
         List<String> list = jedis.hvals(key);  
@@ -936,7 +908,7 @@ public final class RedisUtils
      * @param String long value 要增加的值,可以是负数 
      * @return 增加指定数字后，存储位置的值 
      * */  
-    public long hincrby(String key, String fieid, long value)
+    public static long hincrby(String key, String fieid, long value)
     {  
         Jedis jedis = getJedis();  
         long s = jedis.hincrBy(key, fieid, value);  
@@ -949,7 +921,7 @@ public final class RedisUtils
      * @param String key 
      * @return Set<String> 存储名称的集合 
      * */  
-    public Set<String> hkeys(String key)
+    public static Set<String> hkeys(String key)
     {  
         Jedis jedis = getJedis();   
         Set<String> set = jedis.hkeys(key);  
@@ -962,7 +934,7 @@ public final class RedisUtils
      * @param String  key 
      * @return long 存储的个数 
      * */  
-    public long hlen(String key)
+    public static long hlen(String key)
     {  
         Jedis jedis = getJedis();    
         long len = jedis.hlen(key);  
@@ -976,7 +948,7 @@ public final class RedisUtils
      * @param String ... fieids 存储位置 
      * @return List<String> 
      * */  
-    public List<String> hmget(String key, String... fieids)
+    public static List<String> hmget(String key, String... fieids)
     {  
         //ShardedJedis jedis = getShardedJedis();  
         Jedis jedis = getJedis();   
@@ -985,7 +957,7 @@ public final class RedisUtils
         return list;  
     }  
 
-    public List<byte[]> hmget(byte[] key, byte[]... fieids) 
+    public static List<byte[]> hmget(byte[] key, byte[]... fieids) 
     {  
         //ShardedJedis jedis = getShardedJedis();  
         Jedis jedis = getJedis();    
@@ -1000,7 +972,7 @@ public final class RedisUtils
      * @param Map <String,String> 对应关系 
      * @return 状态，成功返回OK 
      * */  
-    public String hmset(String key, Map<String, String> map)
+    public static String hmset(String key, Map<String, String> map)
     {  
         Jedis jedis = getJedis();  
         String s = jedis.hmset(key, map);  
@@ -1014,7 +986,7 @@ public final class RedisUtils
      * @param Map <String,String> 对应关系 
      * @return 状态，成功返回OK 
      * */  
-    public String hmset(byte[] key, Map<byte[], byte[]> map) {  
+    public static String hmset(byte[] key, Map<byte[], byte[]> map) {  
         Jedis jedis = getJedis();  
         String s = jedis.hmset(key, map);  
         closeResource(jedis);  
@@ -1028,7 +1000,7 @@ public final class RedisUtils
      * @param String  key 
      * @return 值 
      * */  
-    public String get(String key)
+    public static String get(String key)
     {  
         Jedis jedis = getJedis();    
         String value = jedis.get(key);  
@@ -1041,7 +1013,7 @@ public final class RedisUtils
      * @param byte[] key 
      * @return 值 
      * */  
-    public byte[] get(byte[] key) 
+    public static byte[] get(byte[] key) 
     {  
         Jedis jedis = getJedis();    
         byte[] value = jedis.get(key);  
@@ -1057,7 +1029,7 @@ public final class RedisUtils
      * @param String value 
      * @return String 操作状态 
      * */  
-    public String setEx(String key, int seconds, String value) 
+    public static String setEx(String key, int seconds, String value) 
     {  
         Jedis jedis = getJedis();  
         String str = jedis.setex(key, seconds, value);  
@@ -1073,7 +1045,7 @@ public final class RedisUtils
      * @param String  value 
      * @return String 操作状态 
      * */  
-    public String setEx(byte[] key, int seconds, byte[] value)
+    public static String setEx(byte[] key, int seconds, byte[] value)
     {  
         Jedis jedis = getJedis();  
         String str = jedis.setex(key, seconds, value);  
@@ -1087,7 +1059,7 @@ public final class RedisUtils
      * @param String value 
      * @return long 状态码，1插入成功且key不存在，0未插入，key存在 
      * */  
-    public long setnx(String key, String value)
+    public static long setnx(String key, String value)
     {  
         Jedis jedis = getJedis();  
         long str = jedis.setnx(key, value);  
@@ -1101,7 +1073,7 @@ public final class RedisUtils
      * @param String value 
      * @return 状态码 
      * */  
-    public String set(String key, String value)
+    public static String set(String key, String value)
     {  
         return set(SafeEncoder.encode(key), SafeEncoder.encode(value));  
     }  
@@ -1112,7 +1084,7 @@ public final class RedisUtils
      * @param String value 
      * @return 状态码 
      * */  
-    public String set(String key, byte[] value)
+    public static String set(String key, byte[] value)
     {  
         return set(SafeEncoder.encode(key), value);  
     }  
@@ -1123,7 +1095,7 @@ public final class RedisUtils
      * @param byte[] value 
      * @return 状态码 
      * */  
-    public String set(byte[] key, byte[] value)
+    public static String set(byte[] key, byte[] value)
     {  
         Jedis jedis = getJedis();  
         String status = jedis.set(key, value);  
@@ -1140,7 +1112,7 @@ public final class RedisUtils
      * @param String  value 
      * @return long value的长度 
      * */  
-    public long setRange(String key, long offset, String value) 
+    public static long setRange(String key, long offset, String value) 
     {  
         Jedis jedis = getJedis();  
         long len = jedis.setrange(key, offset, value);  
@@ -1154,7 +1126,7 @@ public final class RedisUtils
      * @param String value 
      * @return long 追加后value的长度 
      * **/  
-    public long append(String key, String value) 
+    public static long append(String key, String value) 
     {  
         Jedis jedis = getJedis();  
         long len = jedis.append(key, value);  
@@ -1168,7 +1140,7 @@ public final class RedisUtils
      * @param long number 要减去的值 
      * @return long 减指定值后的值 
      * */  
-    public long decrBy(String key, long number)
+    public static long decrBy(String key, long number)
     {  
         Jedis jedis = getJedis();  
         long len = jedis.decrBy(key, number);  
@@ -1183,7 +1155,7 @@ public final class RedisUtils
      * @param long number 要减去的值 
      * @return long 相加后的值 
      * */  
-    public long incrBy(String key, long number) 
+    public static long incrBy(String key, long number) 
     {  
         Jedis jedis = getJedis();  
         long len = jedis.incrBy(key, number);  
@@ -1198,7 +1170,7 @@ public final class RedisUtils
      * @param long endOffset 结束位置(包含) 
      * @return String 截取的值 
      * */  
-    public String getrange(String key, long startOffset, long endOffset)
+    public static String getrange(String key, long startOffset, long endOffset)
     {  
         Jedis jedis = getJedis();    
         String value = jedis.getrange(key, startOffset, endOffset);  
@@ -1213,7 +1185,7 @@ public final class RedisUtils
      * @param String value 
      * @return String 原始value或null 
      * */  
-    public String getSet(String key, String value)
+    public static String getSet(String key, String value)
     {  
         Jedis jedis = getJedis();  
         String str = jedis.getSet(key, value);  
@@ -1226,7 +1198,7 @@ public final class RedisUtils
      * @param String keys 
      * @return List<String> 值得集合 
      * */  
-    public List<String> mget(String... keys)
+    public static List<String> mget(String... keys)
     {  
         Jedis jedis = getJedis();  
         List<String> str = jedis.mget(keys);  
@@ -1239,7 +1211,7 @@ public final class RedisUtils
      * @param String keysvalues 例:keysvalues="key1","value1","key2","value2"; 
      * @return String 状态码  
      * */  
-    public String mset(String... keysvalues) 
+    public static String mset(String... keysvalues) 
     {  
         Jedis jedis = getJedis();  
         String str = jedis.mset(keysvalues);  
@@ -1252,7 +1224,7 @@ public final class RedisUtils
      * @param String key 
      * @return value值得长度 
      * */  
-    public long strlen(String key) 
+    public static long strlen(String key) 
     {  
         Jedis jedis = getJedis();  
         long len = jedis.strlen(key);  
@@ -1267,7 +1239,7 @@ public final class RedisUtils
      * @param String key 
      * @return 长度 
      * */  
-    public long llen(String key) 
+    public static long llen(String key) 
     {  
         return llen(SafeEncoder.encode(key));  
     }  
@@ -1277,7 +1249,7 @@ public final class RedisUtils
      * @param byte[] key 
      * @return 长度 
      * */  
-    public long llen(byte[] key) 
+    public static long llen(byte[] key) 
     {  
         Jedis jedis = getJedis();    
         long count = jedis.llen(key);  
@@ -1292,7 +1264,7 @@ public final class RedisUtils
      * @param byte[] value 值 
      * @return 状态码 
      * */  
-    public String lset(byte[] key, int index, byte[] value)
+    public static String lset(byte[] key, int index, byte[] value)
     {  
         Jedis jedis = getJedis();  
         String status = jedis.lset(key, index, value);  
@@ -1307,7 +1279,7 @@ public final class RedisUtils
      * @param String  value 值 
      * @return 状态码 
      * */  
-    public String lset(String key, int index, String value)
+    public static String lset(String key, int index, String value)
     {  
         return lset(SafeEncoder.encode(key), index,  
                 SafeEncoder.encode(value));  
@@ -1321,7 +1293,7 @@ public final class RedisUtils
      * @param String value 插入的内容 
      * @return 记录总数 
      * */  
-    public long linsert(String key, LIST_POSITION where, String pivot,  
+    public static long linsert(String key, LIST_POSITION where, String pivot,  
             String value) 
     {  
         return linsert(SafeEncoder.encode(key), where,  
@@ -1336,7 +1308,7 @@ public final class RedisUtils
      * @param byte[] value 插入的内容 
      * @return 记录总数 
      * */  
-    public long linsert(byte[] key, LIST_POSITION where, byte[] pivot,  
+    public static long linsert(byte[] key, LIST_POSITION where, byte[] pivot,  
             byte[] value) 
     {  
         Jedis jedis = getJedis();  
@@ -1351,7 +1323,7 @@ public final class RedisUtils
      * @param int index 位置  
      * @return 值 
      * **/  
-    public String lindex(String key, int index) 
+    public static String lindex(String key, int index) 
     {  
         return SafeEncoder.encode(lindex(SafeEncoder.encode(key), index));  
     }  
@@ -1362,7 +1334,7 @@ public final class RedisUtils
      * @param int index 位置 
      * @return 值 
      * **/  
-    public byte[] lindex(byte[] key, int index) 
+    public static byte[] lindex(byte[] key, int index) 
     {   
         Jedis jedis = getJedis();    
         byte[] value = jedis.lindex(key, index);  
@@ -1375,7 +1347,7 @@ public final class RedisUtils
      * @param String key 
      * @return 移出的记录  
      * */  
-    public String lpop(String key)
+    public static String lpop(String key)
     {  
         return SafeEncoder.encode(lpop(SafeEncoder.encode(key)));  
     }  
@@ -1385,7 +1357,7 @@ public final class RedisUtils
      * @param byte[] key 
      * @return 移出的记录 
      * */  
-    public byte[] lpop(byte[] key)
+    public static byte[] lpop(byte[] key)
     {  
         Jedis jedis = getJedis();  
         byte[] value = jedis.lpop(key);  
@@ -1399,7 +1371,7 @@ public final class RedisUtils
      * @param byte[] key 
      * @return 移出的记录 
      * */  
-    public String rpop(String key)
+    public static String rpop(String key)
     {  
         Jedis jedis = getJedis();  
         String value = jedis.rpop(key);  
@@ -1413,7 +1385,7 @@ public final class RedisUtils
      * @param String value 
      * @return 记录总数 
      * */  
-    public long lpush(String key, String value) 
+    public static long lpush(String key, String value) 
     {  
         return lpush(SafeEncoder.encode(key), SafeEncoder.encode(value));  
     }  
@@ -1424,7 +1396,7 @@ public final class RedisUtils
      * @param String  value 
      * @return 记录总数 
      * */  
-    public long rpush(String key, String value)
+    public static long rpush(String key, String value)
     {  
         Jedis jedis = getJedis();  
         long count = jedis.rpush(key, value);  
@@ -1438,7 +1410,7 @@ public final class RedisUtils
      * @param String value 
      * @return 记录总数 
      * */  
-    public long rpush(byte[] key, byte[] value) 
+    public static long rpush(byte[] key, byte[] value) 
     {  
         Jedis jedis = getJedis();  
         long count = jedis.rpush(key, value);  
@@ -1452,7 +1424,7 @@ public final class RedisUtils
      * @param byte[] value 
      * @return 记录总数 
      * */  
-    public long lpush(byte[] key, byte[] value)
+    public static long lpush(byte[] key, byte[] value)
     {  
         Jedis jedis = getJedis();  
         long count = jedis.lpush(key, value);  
@@ -1467,7 +1439,7 @@ public final class RedisUtils
      * @param long end 
      * @return List 
      * */  
-    public List<String> lrange(String key, long start, long end) 
+    public static List<String> lrange(String key, long start, long end) 
     {  
         Jedis jedis = getJedis();     
         List<String> list = jedis.lrange(key, start, end);  
@@ -1482,7 +1454,7 @@ public final class RedisUtils
      * @param int end 如果为负数，则尾部开始计算 
      * @return List 
      * */  
-    public List<byte[]> lrange(byte[] key, int start, int end)
+    public static List<byte[]> lrange(byte[] key, int start, int end)
     {  
         //ShardedJedis jedis = getShardedJedis();  
         Jedis jedis = getJedis();     
@@ -1498,7 +1470,7 @@ public final class RedisUtils
      * @param byte[] value 要匹配的值 
      * @return 删除后的List中的记录数 
      * */  
-    public long lrem(byte[] key, int c, byte[] value)
+    public static long lrem(byte[] key, int c, byte[] value)
     {  
         Jedis jedis = getJedis();  
         long count = jedis.lrem(key, c, value);  
@@ -1513,7 +1485,7 @@ public final class RedisUtils
      * @param String value 要匹配的值 
      * @return 删除后的List中的记录数 
      * */  
-    public long lrem(String key, int c, String value)
+    public static long lrem(String key, int c, String value)
     {  
         return lrem(SafeEncoder.encode(key), c, SafeEncoder.encode(value));  
     }  
@@ -1525,7 +1497,7 @@ public final class RedisUtils
      * @param int end 记录的结束位置（如果为-1则表示最后一个，-2，-3以此类推） 
      * @return 执行状态码 
      * */  
-    public String ltrim(byte[] key, int start, int end)
+    public static String ltrim(byte[] key, int start, int end)
     {  
         Jedis jedis = getJedis();  
         String str = jedis.ltrim(key, start, end);  
@@ -1540,7 +1512,7 @@ public final class RedisUtils
      * @param int end 记录的结束位置（如果为-1则表示最后一个，-2，-3以此类推） 
      * @return 执行状态码 
      * */  
-    public String ltrim(String key, int start, int end)
+    public static String ltrim(String key, int start, int end)
     {  
         return ltrim(SafeEncoder.encode(key), start, end);  
     }  

@@ -5,6 +5,7 @@ import java.io.PrintWriter;
 
 import javax.servlet.http.HttpServletResponse;
 
+import com.google.gson.Gson;
 import com.jwang.ssmxml.beans.vo.ResultObjBulidModel;
 
 /**
@@ -13,6 +14,8 @@ import com.jwang.ssmxml.beans.vo.ResultObjBulidModel;
  */
 public class BaseController 
 {
+	
+	public static final Gson gson = new Gson();
 	/*
 	 * msg为返回给前台的数据，包括业务数据，状态码，错误提示信息三个部分
 	 * status为状态，该参数可省略

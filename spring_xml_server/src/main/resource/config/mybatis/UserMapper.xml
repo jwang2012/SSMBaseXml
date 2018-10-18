@@ -16,4 +16,13 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <select id="getUserInfoById" resultType="com.jwang.ssmxml.beans.dao.UserDao">
      	SELECT * FROM user WHERE id = #{id}
     </select>
+    
+    <select id="getUserList" resultType="com.jwang.ssmxml.beans.dao.UserDao">
+    	SELECT * FROM user WHERE account LIKE CONCAT(#{userListQueryDto.account},"%")
+    	LIMIT #{userListQueryDto.pageInfo.from},#{userListQueryDto.pageInfo.size}
+    </select>
+    
+    <select id="getUserCount" resultType="int">
+    	SELECT COUNT(*) FROM user WHERE account LIKE CONCAT(#{userListQueryDto.account},"%")
+    </select>
 </mapper>

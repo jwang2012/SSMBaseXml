@@ -17,7 +17,7 @@ public class UserValidate
 	 * @param userDto
 	 * @throws ValidateException
 	 */
-	public static void UsercheckForAdd(UserDto userDto) throws ValidateException 
+	public static void usercheckForAdd(UserDto userDto) throws ValidateException 
 	{
 		if (StringUtils.isEmpty(userDto.getAccount())) 
 		{

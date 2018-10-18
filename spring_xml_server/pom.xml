@@ -205,6 +205,19 @@
         <version>2.7.3</version>
     </dependency>
     
+    <!-- ehcache的包 -->
+	<!-- <dependency>
+	    <groupId>org.ehcache</groupId>
+	    <artifactId>ehcache</artifactId>
+	    <version>3.6.1</version>
+	</dependency> -->
+	
+	<dependency>
+		<groupId>net.sf.ehcache</groupId>
+		<artifactId>ehcache</artifactId>
+		<version>1.6.2</version>
+	</dependency>
+    
 	<!-- 上传组件包 -->
 	<dependency>
 		<groupId>commons-fileupload</groupId>

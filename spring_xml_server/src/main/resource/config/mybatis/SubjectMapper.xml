@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jwang.ssmxml.mapper.SubjectMapper">
+	<resultMap id="subjectMap" type="com.jwang.ssmxml.beans.dao.SubjectDao">
+		<id column="subject_id" property="id"/>
+		<result column="subject_name" property="subjectName"/>
+		<result column="description" property="subjectDescription"/>
+	</resultMap>
+	<!-- 新增课程信息并获取自增主键 -->
+	<insert id="addSubject"> 
+		<selectKey keyProperty="id" resultType="int">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+		INSERT INTO subject_info (subject_name,description)
+		VALUES
+		(#{subjectName},#{subjectDescription})
+	</insert>
+	<!-- 更新课程信息 -->
+	<update id="updateSubject">
+		UPDATE subject_info 
+		<set>
+			<if test="subjectName != null and subjectName != ''">
+				subject_name = #{subjectName},
+			</if>
+			<if test="subjectDescription != null and subjectDescription != ''">
+				description = #{subjectDescription}
+			</if>
+		</set>
+		WHERE subject_id = #{id}
+	</update>
+	<!-- 获取课程信息 -->
+	<select id="getSubjectById" resultMap="subjectMap">
+		SELECT * FROM subject_info WHERE subject_id = #{id}
+	</select>
+	
+	<!-- 删除课程信息 -->
+	<delete id="deleteSubject">
+		DELETE FROM subject_info WHERE subject_id = #{id} 
+	</delete>
+</mapper>
